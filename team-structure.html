@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOLIDWORKS 技术团队人员架构</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card-bg: #ffffff;
+    --text: #1a2233;
+    --text-secondary: #5a6478;
+    --border: #e3e8ef;
+    --shadow: 0 2px 14px rgba(20,40,80,0.07);
+    --shadow-hover: 0 8px 28px rgba(20,40,80,0.14);
+    --radius: 14px;
+    --radius-sm: 9px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a237e 0%, #283593 45%, #1565c0 100%);
+    color: #fff;
+    padding: 26px 36px 22px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 22px rgba(0,0,0,0.22);
+  }
+  .header h1 { font-size: 25px; font-weight: 700; letter-spacing: .5px; }
+  .header p { opacity: .82; margin-top: 6px; font-size: 13.5px; }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex; gap: 16px;
+    padding: 18px 36px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; align-items: center;
+  }
+  .search-box { flex: 1; min-width: 260px; position: relative; }
+  .search-box input {
+    width: 100%; padding: 11px 16px 11px 42px;
+    border: 2px solid var(--border); border-radius: 26px;
+    font-size: 14px; outline: none; transition: .3s; background: var(--bg);
+  }
+  .search-box input:focus { border-color: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,.15); background:#fff; }
+  .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color:#9aa3b2; font-size:16px; }
+
+  /* View toggle */
+  .view-toggle { display:flex; border:2px solid var(--border); border-radius:9px; overflow:hidden; }
+  .view-btn {
+    padding: 9px 15px; border:none; background:#fff; cursor:pointer; font-size:13px;
+    color: var(--text-secondary); transition: .2s;
+  }
+  .view-btn.active { background:#1565c0; color:#fff; }
+
+  /* Main */
+  .main { padding: 24px 36px 60px; max-width: 1500px; margin: 0 auto; }
+
+  /* Overview */
+  .overview-bar { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:22px; }
+  .overview-card {
+    background:#fff; border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow);
+    display:flex; align-items:center; gap:15px;
+  }
+  .overview-icon {
+    width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:21px; color:#fff; flex-shrink:0;
+  }
+  .overview-info h3 { font-size:21px; font-weight:700; }
+  .overview-info p { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+
+  /* Quick nav */
+  .quick-nav { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px; }
+  .nav-pill {
+    padding:9px 18px; border-radius:24px; border:2px solid var(--border); background:#fff;
+    cursor:pointer; font-size:13px; font-weight:600; color:var(--text); transition:.25s;
+    display:flex; align-items:center; gap:8px;
+  }
+  .nav-pill:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .nav-pill .dot { width:10px; height:10px; border-radius:50%; }
+
+  /* Domain card */
+  .domain-card {
+    background:#fff; border-radius:var(--radius); box-shadow:var(--shadow);
+    margin-bottom:20px; overflow:hidden; transition: box-shadow .3s;
+  }
+  .domain-card:hover { box-shadow: var(--shadow-hover); }
+  .domain-header {
+    padding:16px 22px; display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; user-select:none; transition:.2s;
+  }
+  .domain-header:hover { background: rgba(0,0,0,.02); }
+  .domain-header-left { display:flex; align-items:center; gap:14px; }
+  .domain-color { width:7px; height:40px; border-radius:4px; flex-shrink:0; }
+  .domain-title { font-size:17px; font-weight:700; }
+  .domain-sub { font-size:12px; color:var(--text-secondary); margin-top:3px; }
+  .domain-stats { display:flex; gap:16px; align-items:center; }
+  .stat { text-align:center; }
+  .stat-num { font-size:17px; font-weight:700; color:#1565c0; }
+  .stat-lbl { font-size:10.5px; color:#9aa3b2; }
+  .btn-detail {
+    padding:6px 14px; border-radius:16px; border:none; color:#fff; font-size:12px; font-weight:600;
+    cursor:pointer; white-space:nowrap;
+  }
+  .expand-icon {
+    width:30px; height:30px; border-radius:50%; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--text-secondary);
+    transition: transform .3s;
+  }
+  .domain-card.expanded .expand-icon { transform: rotate(180deg); }
+
+  /* Body */
+  .domain-body { max-height:0; overflow:hidden; transition: max-height .45s ease-out; }
+  .domain-card.expanded .domain-body { max-height: 2000px; transition: max-height .55s ease-in; }
+  .domain-inner { padding: 0 22px 22px; }
+  .block { margin-top:16px; }
+  .block-label {
+    font-size:11.5px; font-weight:700; color:var(--text-secondary);
+    text-transform:uppercase; letter-spacing:1px; margin-bottom:9px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .tags { display:flex; flex-wrap:wrap; gap:7px; }
+  .product-tag {
+    padding:5px 13px; border-radius:6px; font-size:12.5px; font-weight:600;
+    background: rgba(21,101,192,.08); color:#1565c0; border:1px solid rgba(21,101,192,.16);
+  }
+  .person-chip {
+    padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600;
+    background: var(--bg); border:1px solid var(--border);
+    display:inline-flex; align-items:center; gap:7px; transition:.2s; cursor:default;
+  }
+  .person-chip:hover { background:#fff; border-color:#b8c2d4; box-shadow:0 2px 8px rgba(0,0,0,.05); transform:translateY(-1px); }
+  .person-dot { width:8px; height:8px; border-radius:50%; background:#9aa3b2; }
+  .person-branch {
+    font-size:11px; font-weight:700; padding:1px 6px; border-radius:5px;
+    letter-spacing:.5px; margin-left:2px;
+  }
+
+  /* Group colors matching original image (light tint bg + branch-colored text) */
+  .grp-dg{background:#e8eef6;color:#2c5282}   /* DG dark blue */
+  .grp-su{background:#e8f4fb;color:#2b6cb0} /* SU light blue */
+  .grp-sz{background:#fdf6e3;color:#b7791f}  /* SZ yellow */
+  .grp-gz{background:#e6f2fb;color:#2b6cb0}  /* GZ medium blue */
+  .grp-hz{background:#e9f8f0;color:#276749}  /* HZ green */
+  .grp-sh{background:#fdf0e3;color:#c05621}  /* SH orange */
+
+  .leader-badge {
+    display:inline-block; font-size:9px; font-weight:700;
+    padding:1px 6px; border-radius:4px; background:#e53e3e; color:#fff;
+    margin-left:4px; vertical-align:middle;
+  }
+
+  /* Pending placeholder */
+  .pending {
+    margin-top:14px; padding:14px 18px; border-radius:var(--radius-sm);
+    background: repeating-linear-gradient(45deg,#fff8e1,#fff8e1 10px,#fffde7 10px,#fffde7 20px);
+    border:1px dashed #ffca28; color:#a1887f; font-size:13px;
+  }
+  .pending b { color:#ef6c00; }
+
+  /* Modal */
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:1000;
+    align-items:center; justify-content:center; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.show { display:flex; }
+  .modal {
+    background:#fff; border-radius:16px; width:90%; max-width:640px; max-height:84vh; overflow-y:auto;
+    box-shadow:0 24px 70px rgba(0,0,0,.32); animation: mIn .3s ease-out;
+  }
+  @keyframes mIn { from {opacity:0; transform:scale(.96) translateY(18px);} to {opacity:1; transform:scale(1);} }
+  .modal-header {
+    padding:22px 26px; border-bottom:1px solid var(--border); position:sticky; top:0; background:#fff;
+    display:flex; align-items:center; justify-content:space-between; border-radius:16px 16px 0 0;
+  }
+  .modal-header h2 { font-size:19px; display:flex; align-items:center; gap:10px; }
+  .modal-close {
+    width:34px; height:34px; border-radius:50%; border:none; background:var(--bg); cursor:pointer;
+    font-size:17px; color:var(--text-secondary); transition:.2s;
+  }
+  .modal-close:hover { background:#ffebee; color:#e53935; }
+  .modal-body { padding:22px 26px; }
+  .m-block { margin-bottom:20px; }
+  .m-block h4 {
+    font-size:12px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px;
+    margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+  }
+  .m-tags { display:flex; flex-wrap:wrap; gap:8px; }
+  .m-chip { padding:6px 14px; border-radius:7px; font-size:13px; font-weight:600; background:var(--bg); border:1px solid var(--border); }
+
+  .empty { text-align:center; padding:60px 20px; color:#b0b7c3; }
+  .empty .icon { font-size:46px; margin-bottom:10px; }
+
+  /* Mode toggle (domain / branch) */
+  .mode-toggle { display:flex; border:2px solid var(--border); border-radius:9px; overflow:hidden; }
+  .mode-btn {
+    padding:9px 16px; border:none; background:#fff; cursor:pointer; font-size:13px;
+    color:var(--text-secondary); transition:.2s; font-weight:600;
+  }
+  .mode-btn.active { background:#1565c0; color:#fff; }
+
+  /* Import button */
+  .import-btn {
+    padding:9px 16px; border-radius:9px; background:#2e7d32; color:#fff;
+    font-size:13px; font-weight:600; cursor:pointer; transition:.2s; white-space:nowrap;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .import-btn:hover { background:#1b5e20; box-shadow: var(--shadow); }
+
+  /* Branch card */
+  .branch-card { background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:20px; overflow:hidden; transition:box-shadow .3s; }
+  .branch-card:hover { box-shadow: var(--shadow-hover); }
+  .branch-header { padding:16px 22px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; }
+  .branch-header:hover { background: rgba(0,0,0,.02); }
+  .branch-header-left { display:flex; align-items:center; gap:14px; }
+  .branch-badge {
+    width:54px; height:54px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:17px; font-weight:800; letter-spacing:.5px; flex-shrink:0;
+  }
+  .branch-title { font-size:17px; font-weight:700; }
+  .branch-sub { font-size:12px; color:var(--text-secondary); margin-top:3px; }
+  .branch-stats { display:flex; gap:16px; align-items:center; }
+  .branch-body { max-height:0; overflow:hidden; transition: max-height .45s ease-out; }
+  .branch-card.expanded .branch-body { max-height: 2500px; transition: max-height .55s ease-in; }
+  .branch-inner { padding: 0 22px 22px; }
+  .member-row { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  .member-row:last-child { border-bottom:none; }
+  .member-row:hover { background: rgba(0,0,0,.015); }
+  .member-name-x { font-size:14px; font-weight:600; min-width:130px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .member-domains { display:flex; flex-wrap:wrap; gap:6px; flex:1; }
+  .domain-chip { font-size:11px; padding:3px 10px; border-radius:5px; background:rgba(21,101,192,.07); color:#1565c0; border:1px solid rgba(21,101,192,.14); }
+
+  /* Detail table (shared) */
+  .detail-team-table { width:100%; border-collapse:collapse; }
+  .detail-team-table th { text-align:left; padding:10px 14px; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.5px; background:var(--bg); border-bottom:2px solid var(--border); }
+  .detail-team-table td { padding:10px 14px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:top; }
+  .detail-team-table tr:hover td { background:rgba(21,101,192,.03); }
+
+  @media (max-width:768px){
+    .header{padding:18px 16px} .header h1{font-size:20px}
+    .toolbar{padding:14px 16px} .main{padding:16px}
+    .domain-header{padding:14px 16px} .domain-inner{padding:0 16px 16px}
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔧 SOLIDWORKS 技术团队人员架构</h1>
+  <p>按产品领域 / 分公司双视角 · 共 8 大领域 · 点击展开查看产品、人员与负责人 · 支持搜索</p>
+</div>
+
+<div class="toolbar">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索领域 / 产品 / 人员 / 分公司..." oninput="handleSearch(this.value)">
+  </div>
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('domain')">📂 按领域</button>
+    <button class="mode-btn" onclick="setMode('branch')">🏢 按分公司</button>
+  </div>
+  <div class="view-toggle" id="viewToggle">
+    <button class="view-btn active" onclick="setView('grid')" title="卡片视图">▦</button>
+    <button class="view-btn" onclick="setView('list')" title="紧凑视图">☰</button>
+  </div>
+  <label class="import-btn" title="选择 Excel 文件以更新网页数据">
+    📥 导入Excel
+    <input type="file" id="excelInput" accept=".xlsx,.xls" onchange="importExcel(this)" style="display:none">
+  </label>
+</div>
+
+<div class="main">
+  <div class="overview-bar" id="overviewBar"></div>
+  <div class="quick-nav" id="quickNav"></div>
+  <div id="domainsContainer"></div>
+  <div class="empty" id="emptyState" style="display:none">
+    <div class="icon">🔎</div>
+    <p>没有匹配的领域、产品或人员</p>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 id="modalTitle"></h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+// ===== 真实数据（仅含图中存在的人员，无编造）=====
+let domains = [
+  {
+    id: 'imp-design-mcad', name: 'Design-MCAD', color: '#1565c0',
+    products: ['SOLIDWORKS', 'MBD', 'DraftSight', 'Inspection', 'IntelliDRAW', 'DriveWorks', 'Camnetics', 'Power Surface', 'Rhino', 'ExactFlat', 'Snap 3D', 'eDrawings for Multi CAD', '3DE', 'Service'],
+    people: [
+      { name:'Kyle Yuan', group:'DG', leader:true, title:'Team Leader' },
+      { name:'Kyle Wu', group:'SU', leader:true, title:'Deputy Team Leader' },
+      { name:'Ming', group:'SZ' },
+      { name:'Eason', group:'SZ' },
+      { name:'Leon', group:'SZ' },
+      { name:'Curdy', group:'SZ' },
+      { name:'Sam Chen', group:'DG' },
+      { name:'Liork', group:'DG' },
+      { name:'Hoen', group:'GZ' },
+      { name:'Jay', group:'GZ' },
+      { name:'Alvin', group:'GZ' },
+      { name:'Josh', group:'GZ' },
+      { name:'Dylan', group:'SU' },
+      { name:'Tim', group:'SU' },
+      { name:'Rania', group:'SU' },
+      { name:'Dawson', group:'SH' },
+      { name:'Derek', group:'SH' },
+      { name:'Lex', group:'HZ' },
+      { name:'Craig', group:'HZ' }
+    ],
+    pending: false
+  },
+  {
+    id: 'imp-design-ecad', name: 'Design-ECAD', color: '#00838f',
+    products: ['Electrical', 'LingWorks', '3DE', 'Service'],
+    people: [
+      { name:'Nicky', group:'SZ' },
+      { name:'SamZhong', group:'GZ' }
+    ],
+    pending: false
+  },
+  {
+    id: 'imp-simulation', name: 'Simulation', color: '#c62828',
+    products: ['Simulation', 'ABAQUS', 'Flow Simulation', 'XFlow', 'Plastics', 'CST', '3DE', 'Service'],
+    people: [
+      { name:'Rick', group:'DG', leader:true, title:'Team Leader' },
+      { name:'Dylan', group:'SU' },
+      { name:'Hoen', group:'GZ' }
+    ],
+    pending: false
+  },
+  {
+    id: 'imp-marketing-communication', name: 'Marketing & Communication', color: '#ef6c00',
+    products: ['Visualize', 'Composer', '3DE', 'Service'],
+    people: [
+      { name:'Eason', group:'SZ', leader:true, title:'Team Leader' },
+      { name:'Derek', group:'SH' }
+    ],
+    pending: false
+  },
+  {
+    id: 'imp-governance', name: 'Governance', color: '#6a1b9a',
+    products: ['PDM', 'Manage', 'ENOVIA', 'EOP', 'IntelliKIT', 'Curtain', '3DE', 'Service'],
+    people: [
+      { name:'Simon', group:'DG', leader:true, title:'Team Leader' },
+      { name:'Jerry', group:'SZ', leader:true, title:'Deputy Team Leader' },
+      { name:'Dawson', group:'SH', leader:true, title:'Deputy Team Leader' },
+      { name:'Bennett', group:'SZ' },
+      { name:'Ming', group:'SZ' },
+      { name:'Joey', group:'GZ' },
+      { name:'Jay', group:'GZ' },
+      { name:'Kyle Wu', group:'SU' },
+      { name:'Tim', group:'SU' },
+      { name:'Savion', group:'SH' }
+    ],
+    pending: false
+  },
+  {
+    id: 'imp-furniture', name: 'Furniture', color: '#2e7d32',
+    products: ['SWOOD'],
+    people: [
+      { name:'Lex', group:'HZ', leader:true, title:'Team Leader' },
+      { name:'Craig', group:'HZ' }
+    ],
+    pending: false
+  },
+  {
+    id: 'imp-implementation', name: 'Implementation', color: '#455a64',
+    products: [],
+    people: [
+      { name:'Mick', group:'SZ', leader:true, title:'Team Leader' }
+    ],
+    pending: false
+  },
+  {
+    id: 'imp-customer-service', name: 'Customer Service', color: '#00897b',
+    products: [],
+    people: [
+      { name:'Johnson', group:'DG', leader:true, title:'Team Leader' },
+      { name:'Leon', group:'SZ' },
+      { name:'Curdy', group:'SZ' },
+      { name:'Sam Chen', group:'DG' },
+      { name:'Liork', group:'DG' },
+      { name:'Alvin', group:'GZ' },
+      { name:'Josh', group:'GZ' }
+    ],
+    pending: false
+  }
+];
+
+let searchQuery = '';
+let currentView = 'grid';
+let viewMode = 'domain';
+
+// 分公司元信息（颜色对应原图分组标签；城市为常见缩写解读，可随时更正）
+const branchMeta = {
+  DG: { name:'DG 东莞', color:'#2c5282' },
+  SU: { name:'SU 苏州', color:'#3182ce' },
+  SZ: { name:'SZ 深圳', color:'#d69e2e' },
+  GZ: { name:'GZ 广州', color:'#2b6cb0' },
+  HZ: { name:'HZ 杭州', color:'#2f855a' },
+  SH: { name:'SH 上海', color:'#dd6b20' }
+};
+
+// 领域名称 -> 固定配色（导入时优先匹配，未匹配则循环取色板）
+const domainColorMap = {
+  'Design-MCAD':'#1565c0',
+  'Design-ECAD':'#00838f',
+  'Simulation':'#c62828',
+  'Marketing & Communication':'#ef6c00',
+  'Governance':'#6a1b9a',
+  'Furniture':'#2e7d32',
+  'Custom-Made':'#ad1457',
+  'Implementation':'#455a64',
+  'Customer Service':'#00897b'
+};
+const palette = ['#1565c0','#00838f','#c62828','#ef6c00','#6a1b9a','#2e7d32','#ad1457','#455a64','#00897b','#1976d2','#5e35b1','#c2185b','#00796b','#f57c00','#3949ab'];
+let colorIdx = 0;
+
+// 分公司元信息兜底（Excel 中出现新分公司代码时也能正常显示）
+function getBranchMeta(code){ return branchMeta[code] || { name: code, color:'#718096' }; }
+
+// 聚合：按分公司统计成员及其所属领域
+function buildBranchData(){
+  const map = {};
+  domains.forEach(d => {
+    d.people.forEach(p => {
+      if(!p.group || looksLikeHeader(p.group)) return;
+      const code = p.group.toUpperCase();
+      if(looksLikeHeader(code)) return;
+      if(!map[code]) map[code] = {};
+      const key = p.name;
+      if(!map[code][key]) map[code][key] = { name:p.name, domains:[], leader:!!p.leader, title:p.title||'' };
+      if(!map[code][key].domains.includes(d.name)) map[code][key].domains.push(d.name);
+    });
+  });
+  return Object.entries(map).map(([code, members]) => {
+    const list = Object.values(members).sort((a,b)=> (b.leader?1:0)-(a.leader?1:0));
+    return { code, members:list, count:list.length };
+  }).sort((a,b)=> b.count - a.count);
+}
+
+function totalPeople(){
+  // 按分公司归并后去重统计，与「按分公司」视图口径一致（仅计有分公司归属的人员）
+  return buildBranchData().reduce((s,b)=>s+b.members.length, 0);
+}
+function totalProducts(){ return domains.reduce((s,d)=>s+d.products.length,0); }
+function pendingCount(){ return domains.filter(d=>d.pending).length; }
+
+// Helper: get display name for a person entry
+function personName(p){ return typeof p === 'string' ? p : p.name; }
+// Helper: check if person matches search
+function personMatch(p, q){ return personName(p).toLowerCase().includes(q); }
+
+function renderOverview(){
+  const branchCount = buildBranchData().length;
+  document.getElementById('overviewBar').innerHTML = `
+    <div class="overview-card">
+      <div class="overview-icon" style="background:linear-gradient(135deg,#1565c0,#42a5f5)">🗂️</div>
+      <div class="overview-info"><h3>${domains.length}</h3><p>产品领域</p></div>
+    </div>
+    <div class="overview-card">
+      <div class="overview-icon" style="background:linear-gradient(135deg,#2e7d32,#66bb6a)">🧩</div>
+      <div class="overview-info"><h3>${totalProducts()}</h3><p>已录入产品</p></div>
+    </div>
+    <div class="overview-card">
+      <div class="overview-icon" style="background:linear-gradient(135deg,#e53935,#ff7043)">👥</div>
+      <div class="overview-info"><h3>${totalPeople()}</h3><p>人员统计</p></div>
+    </div>
+    <div class="overview-card">
+      <div class="overview-icon" style="background:linear-gradient(135deg,#6a1b9a,#9c27b0)">🏢</div>
+      <div class="overview-info"><h3>${branchCount}</h3><p>分公司</p></div>
+    </div>`;
+}
+
+function renderQuickNav(){
+  if(viewMode === 'branch'){
+    document.getElementById('quickNav').innerHTML = buildBranchData().map(b => `
+      <button class="nav-pill" onclick="openBranchDetail('${b.code}')">
+        <span class="dot" style="background:${getBranchMeta(b.code).color}"></span>
+        ${b.code}
+        <small style="opacity:.55;margin-left:2px">${b.members.length}人</small>
+      </button>`).join('');
+    return;
+  }
+  document.getElementById('quickNav').innerHTML = domains.map(d => `
+    <button class="nav-pill" onclick="openDetail('${d.id}')">
+      <span class="dot" style="background:${d.color}"></span>
+      ${d.name}
+      <small style="opacity:.55;margin-left:2px">${d.people.length}人</small>
+    </button>`).join('');
+}
+
+function domainVisible(d){
+  if(!searchQuery) return true;
+  const q = searchQuery.toLowerCase();
+  return d.name.toLowerCase().includes(q)
+    || d.products.some(p=>p.toLowerCase().includes(q))
+    || d.people.some(p=>personMatch(p,q));
+}
+
+function renderDomains(){
+  const c = document.getElementById('domainsContainer');
+  let visible = 0;
+  c.innerHTML = domains.map(d=>{
+    if(!domainVisible(d)) return '';
+    visible++;
+    const known = !d.pending;
+    return `
+    <div class="domain-card expanded" id="dom-${d.id}">
+      <div class="domain-header" onclick="toggleDomain('${d.id}')">
+        <div class="domain-header-left">
+          <div class="domain-color" style="background:${d.color}"></div>
+          <div>
+            <div class="domain-title">${d.name}</div>
+            <div class="domain-sub">${known ? '产品 '+d.products.length+' · 人员 '+d.people.length : '待补充数据'}</div>
+          </div>
+        </div>
+        <div class="domain-stats">
+          <div class="stat"><div class="stat-num">${d.products.length}</div><div class="stat-lbl">产品</div></div>
+          <div class="stat"><div class="stat-num">${d.people.length}</div><div class="stat-lbl">人员</div></div>
+          <button class="btn-detail" style="background:${d.color}" onclick="event.stopPropagation();openDetail('${d.id}')">详情 →</button>
+          <div class="expand-icon">▼</div>
+        </div>
+      </div>
+      <div class="domain-body">
+        <div class="domain-inner">
+          <div class="block">
+            <div class="block-label">📦 产品</div>
+            <div class="tags">
+              ${known && d.products.length
+                ? d.products.map(p=>`<span class="product-tag">${p}</span>`).join('')
+                : '<span style="color:#9aa3b2;font-size:13px">—</span>'}
+            </div>
+          </div>
+          <div class="block">
+            <div class="block-label">👥 人员</div>
+            <div class="tags">
+              ${known && d.people.length
+                ? d.people.map(p => {
+                    const name = personName(p);
+                    const isObj = typeof p === 'object';
+                    const grp = isObj && p.group ? p.group : '';
+                    const lead = isObj && p.leader;
+                    const title = isObj && p.title ? p.title : '';
+                    const dotColor = grp ? '' : `background:${d.color}`;
+                    return `<span class="person-chip">
+                      <span class="person-dot" style="${dotColor}"></span>
+                      ${name}${grp ? `<span class="person-branch grp-${grp}">（${grp.toUpperCase()}）</span>` : ''}
+                      ${lead ? `<span class="leader-badge">⭐ ${title||'Leader'}</span>` : ''}
+                    </span>`;
+                  }).join('')
+                : '<span style="color:#9aa3b2;font-size:13px">—</span>'}
+            </div>
+          </div>
+          ${d.pending ? `
+          <div class="pending">
+            <b>⏳ 待补充：</b>该领域的产品与人员尚未提供。请告诉我 <b>${d.name}</b> 对应的产品和人员名单，我会立即填入（绝不编造图中没有的信息）。
+          </div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('emptyState').style.display = visible ? 'none':'block';
+}
+
+function toggleDomain(id){
+  document.getElementById('dom-'+id).classList.toggle('expanded');
+}
+
+function openDetail(id){
+  const d = domains.find(x=>x.id===id);
+  if(!d) return;
+  document.getElementById('modalTitle').innerHTML = `
+    <span style="width:14px;height:14px;border-radius:4px;background:${d.color};display:inline-block"></span>
+    ${d.name}`;
+  const prodHtml = d.products.length
+    ? d.products.map(p=>`<span class="m-chip">${p}</span>`).join('')
+    : '<span style="color:#9aa3b2">（暂无）</span>';
+  const peopleHtml = d.people.length
+    ? d.people.map(p => {
+        const name = personName(p);
+        const isObj = typeof p === 'object';
+        const grp = isObj && p.group ? p.group : '';
+        const lead = isObj && p.leader;
+        const title = isObj && p.title || '';
+        let chip = `<span class="m-chip" style="background:#fff;border-color:${d.color}33;color:${d.color}">${name}`;
+        if (grp) chip += `<span class="person-branch grp-${grp}" style="margin-left:4px">（${grp.toUpperCase()}）</span>`;
+        if (lead) chip += ` <span class="leader-badge">⭐ ${title||'Leader'}</span>`;
+        return chip + '</span>';
+      }).join('')
+    : '<span style="color:#9aa3b2">（暂无）</span>';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="m-block">
+      <h4>📦 包含产品 (${d.products.length})</h4>
+      <div class="m-tags">${prodHtml}</div>
+    </div>
+    <div class="m-block">
+      <h4>👥 人员组成 (${d.people.length})</h4>
+      <div class="m-tags">${peopleHtml}</div>
+    </div>
+    ${d.pending ? `
+    <div class="pending" style="margin-top:0">
+      <b>⏳ 此领域数据待补充。</b>请回复：<b>${d.name}</b> 的产品和人员名单。
+    </div>` : ''}
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal(e){
+  if(e && e.target!==e.currentTarget) return;
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function toggleBranch(code){
+  const el = document.getElementById('br-'+code);
+  if(el) el.classList.toggle('expanded');
+}
+
+function openBranchDetail(code){
+  const b = buildBranchData().find(x=>x.code===code);
+  if(!b) return;
+  const meta = getBranchMeta(code);
+  document.getElementById('modalTitle').innerHTML = `
+    <span style="width:14px;height:14px;border-radius:4px;background:${meta.color};display:inline-block"></span>
+    ${meta.name}`;
+  const rows = b.members.map(m=>`
+    <tr>
+      <td><strong>${m.name}</strong> ${m.leader?`<span class="leader-badge">⭐ ${m.title||'Leader'}</span>`:''}</td>
+      <td>${m.domains.map(d=>`<span class="domain-chip">${d}</span>`).join(' ')}</td>
+    </tr>`).join('');
+  document.getElementById('modalBody').innerHTML = `
+    <div class="m-block">
+      <h4>👥 ${b.members.length} 名成员 · 覆盖 ${[...new Set(b.members.flatMap(m=>m.domains))].length} 个领域</h4>
+      <table class="detail-team-table">
+        <thead><tr><th>成员</th><th>所属领域</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function renderBranches(){
+  const c = document.getElementById('domainsContainer');
+  const data = buildBranchData();
+  let visible = 0;
+  c.innerHTML = data.map(b => {
+    const meta = getBranchMeta(b.code);
+    let members = b.members;
+    if(searchQuery){
+      const q = searchQuery.toLowerCase();
+      members = members.filter(m => m.name.toLowerCase().includes(q) || m.domains.some(d=>d.toLowerCase().includes(q)));
+      if(!b.code.toLowerCase().includes(q) && members.length===0) return '';
+    }
+    if(members.length===0) return '';
+    visible++;
+    const allDomains = [...new Set(b.members.flatMap(m=>m.domains))].length;
+    return `
+    <div class="branch-card expanded" id="br-${b.code}">
+      <div class="branch-header" onclick="toggleBranch('${b.code}')">
+        <div class="branch-header-left">
+          <div class="branch-badge" style="background:${meta.color}">${b.code}</div>
+          <div>
+            <div class="branch-title">${meta.name}</div>
+            <div class="branch-sub">${b.members.length} 人 · 覆盖 ${allDomains} 个领域</div>
+          </div>
+        </div>
+        <div class="branch-stats">
+          <div class="stat"><div class="stat-num">${b.members.length}</div><div class="stat-lbl">总人数</div></div>
+          <button class="btn-detail" style="background:${meta.color}" onclick="event.stopPropagation();openBranchDetail('${b.code}')">详情 →</button>
+          <div class="expand-icon">▼</div>
+        </div>
+      </div>
+      <div class="branch-body">
+        <div class="branch-inner">
+          ${members.map(m => `
+            <div class="member-row">
+              <div class="member-name-x">${m.name} ${m.leader ? `<span class="leader-badge">⭐ ${m.title||'Leader'}</span>` : ''}</div>
+              <div class="member-domains">
+                ${m.domains.map(d=>`<span class="domain-chip">${d}</span>`).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('emptyState').style.display = visible ? 'none':'block';
+}
+
+function render(){
+  renderOverview();
+  renderQuickNav();
+  if(viewMode === 'domain') renderDomains();
+  else renderBranches();
+}
+
+function setMode(m){
+  viewMode = m;
+  document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',(m==='domain'&&i===0)||(m==='branch'&&i===1)));
+  document.getElementById('viewToggle').style.display = m==='domain' ? 'flex':'none';
+  render();
+}
+
+function handleSearch(v){ searchQuery = v.trim(); render(); }
+
+function setView(v){
+  currentView = v;
+  document.querySelectorAll('.view-btn').forEach((b,i)=>b.classList.toggle('active',(v==='grid'&&i===0)||(v==='list'&&i===1)));
+}
+
+// ===== 导入 Excel 更新数据 =====
+// 在 Excel 的「领域」「人员」两个 sheet 中编辑后，于网页点「导入Excel」选文件即可刷新
+function findDataRows(rows, headerKey){
+  let start = 0;
+  for(let i=0;i<rows.length;i++){
+    if(rows[i] && rows[i][0] && rows[i][0].toString().indexOf(headerKey) >= 0){ start = i+1; break; }
+  }
+  return rows.slice(start);
+}
+
+// 跳过看起来像表头或说明行的数据
+const HEADER_KEYWORDS = ['领域名称','姓名','产品','分公司','是否负责人','职位','使用说明','字段说明','备注'];
+function looksLikeHeader(val){
+  const s = (val||'').toString().trim();
+  if(!s) return true;
+  if(s === '-' || s === '—') return true;   // 仅匹配单独的占位符，不匹配含连字符的合法名称（如 Design-MCAD）
+  return HEADER_KEYWORDS.some(k => s.indexOf(k) >= 0);
+}
+
+function importExcel(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      if(typeof XLSX === 'undefined'){
+        alert('⚠️ Excel 解析库未加载，请确认网络可访问 CDN（cdn.jsdelivr.net）后刷新页面再试。');
+        return;
+      }
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const domainMap = {};
+
+      // 领域 sheet
+      const dSheet = wb.SheetNames.includes('领域') ? '领域' : wb.SheetNames[0];
+      const dAll = XLSX.utils.sheet_to_json(wb.Sheets[dSheet], {header:1});
+      const dRows = findDataRows(dAll, '领域名称');
+      dRows.forEach(r => {
+        const name = (r[0]||'').toString().trim();
+        if(!name || looksLikeHeader(name)) return;
+        const prods = (r[1]||'').toString().split(',').map(s=>s.trim()).filter(Boolean);
+        domainMap[name] = { name, products: prods, people: [] };
+      });
+
+      // 人员 sheet
+      const pSheet = wb.SheetNames.includes('人员') ? '人员' : wb.SheetNames[1];
+      const pAll = XLSX.utils.sheet_to_json(wb.Sheets[pSheet], {header:1});
+      const pRows = findDataRows(pAll, '姓名');
+      pRows.forEach(r => {
+        const dom = (r[0]||'').toString().trim();
+        const name = (r[1]||'').toString().trim();
+        if(!dom || !name || looksLikeHeader(dom) || looksLikeHeader(name)) return;
+        const branch = (r[2]||'').toString().trim();
+        const leader = (r[3]||'').toString().trim() === '是';
+        const title = (r[4]||'').toString().trim();
+        const cleanBranch = (branch && !looksLikeHeader(branch)) ? branch.toUpperCase() : '';
+        if(!domainMap[dom]) domainMap[dom] = { name:dom, products:[], people:[] };
+        domainMap[dom].people.push({ name, group: cleanBranch, leader, title });
+      });
+
+      const newDomains = Object.values(domainMap).map(d => {
+        const id = 'imp-' + d.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+        const color = domainColorMap[d.name] || palette[colorIdx++ % palette.length];
+        return { id, name:d.name, color, products:d.products, people:d.people, pending:false };
+      });
+
+      if(newDomains.length){
+        domains = newDomains;
+        colorIdx = 0;
+        render();
+        alert('✅ 已更新 '+newDomains.length+' 个领域、'+
+          newDomains.reduce((s,d)=>s+d.people.length,0)+' 条人员记录。');
+      } else {
+        alert('⚠️ 未在 Excel 中找到有效数据，请检查「领域」和「人员」两个 sheet。');
+      }
+    } catch(err){
+      alert('导入失败：'+err.message);
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value = '';  // 允许重复选择同一文件
+}
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+render();
+</script>
+</body>
+</html>
